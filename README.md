@@ -14,14 +14,14 @@ Instead of just going back and paying (which I did, don't worry!), I decided to 
 
 ---
 
-## 🚀 Features
+##  Features
 
-- **⚡ SMS Auto-Magic**: Instantly parses incoming Momo (MTN) and Telecel (T-CASH) notifications. 
-- **🎨 Color-Coded Sanity**: MTN is Yellow, Telecel is Red. It's so bright you could see a payment from across the market.
-- **🎮 Physical Controller Support**: Connects to a custom embedded system via USB-OTG. Traders can navigate their transactions with physical buttons (Next, Prev, Seen) instead of fumbling with a touch screen.
-- **🛡️ "Proof-Read" IDs**: A parser so strict it would make my high school English teacher proud. No malformed IDs or duplicate records allowed.
-- **📊 Nerdy Analytics**: Track "Total Cash In" and "Average Transaction Value" without needing a spreadsheet.
-- **🌙 Splashy Entrance**: A beautiful splash screen that makes the app feel like it cost a million bucks (even though it's for the humble street trader).
+- **SMS Auto-Magic**: Instantly parses incoming Momo (MTN) and Telecel (T-CASH) notifications. 
+- **Color-Coded Sanity**: MTN is Yellow, Telecel is Red. It's so bright you could see a payment from across the market.
+- **Physical Controller Support**: Connects to a custom embedded system via USB-OTG. Traders can navigate their transactions with physical buttons (Next, Prev, Seen) instead of fumbling with a touch screen.
+- **"Proof-Read" IDs**: A parser so strict it would make my high school English teacher proud. No malformed IDs or duplicate records allowed.
+- **Nerdy Analytics**: Track "Total Cash In" and "Average Transaction Value" without needing a spreadsheet.
+- **Splashy Entrance**: A beautiful splash screen that makes the app feel like it cost a million bucks (even though it's for the humble street trader).
 
 ---
 
