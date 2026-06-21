@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+
+    <!-- Wallet Shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,44h36c2.2,0 4,1.8 4,4v16c0,2.2 -1.8,4 -4,4H34c-2.2,0 -4,-1.8 -4,-4V48C30,45.8 31.8,44 34,44z" />
+
+    <!-- Wallet Flap -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M62,50h12v8h-12z" />
+
+    <!-- Payment Arrow -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,30l12,12l-12,12l0,-8l-14,0l0,-8l14,0z" />
+</vector>
