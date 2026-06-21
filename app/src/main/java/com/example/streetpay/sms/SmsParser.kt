@@ -34,19 +34,21 @@ object SmsParser {
     fun parse(smsBody: String, timestamp: Long, address: String): TransactionEntity? {
         val network = detectNetwork(address, smsBody) ?: "MTN"
         
-        // Try Telecel Pattern if network is Telecel or if it matches
+        // 1. Try Telecel Pattern
         val telecelMatcher = telecelPattern.matcher(smsBody)
         if (telecelMatcher.find()) {
+            val id = telecelMatcher.group(1)?.trim() ?: ""
+            if (!isValidTransactionId(id)) return null
+
             var name = telecelMatcher.group(3)?.trim() ?: "Unknown"
             val reference = telecelMatcher.group(4)?.trim()
             
-            // If it's a cross-network transfer, the real name might be in the reference
             if (name.contains("MTN MOBILE MONEY", ignoreCase = true) && reference?.contains("-") == true) {
                 name = reference.substringAfterLast("-").trim()
             }
 
             return TransactionEntity(
-                transactionId = telecelMatcher.group(1) ?: "",
+                transactionId = id,
                 name = name,
                 amount = telecelMatcher.group(2)?.replace(",", "")?.toDoubleOrNull() ?: 0.0,
                 reference = telecelMatcher.group(8)?.trim() ?: reference,
@@ -58,32 +60,38 @@ object SmsParser {
             )
         }
 
-        // Try New Format first (more detailed)
+        // 2. Try New MTN Format
         val newMatcher = cashInPatternNew.matcher(smsBody)
         if (newMatcher.find()) {
+            val id = newMatcher.group(5)?.trim() ?: ""
+            if (!isValidTransactionId(id)) return null
+
             return TransactionEntity(
-                transactionId = newMatcher.group(5) ?: "",
+                transactionId = id,
                 name = newMatcher.group(2)?.trim() ?: "Unknown",
                 amount = newMatcher.group(1)?.replace(",", "")?.toDoubleOrNull() ?: 0.0,
                 reference = newMatcher.group(4)?.trim(),
                 transactionType = "CASH_IN",
-                network = network ?: "MTN",
+                network = network,
                 balance = newMatcher.group(3)?.replace(",", "")?.toDoubleOrNull(),
                 smsBody = smsBody,
                 timestamp = timestamp
             )
         }
 
-        // Fallback to Legacy Format
+        // 3. Fallback to Legacy MTN Format
         val legacyMatcher = cashInPatternLegacy.matcher(smsBody)
         if (legacyMatcher.find()) {
+            val id = legacyMatcher.group(4)?.trim() ?: ""
+            if (!isValidTransactionId(id)) return null
+
             return TransactionEntity(
-                transactionId = legacyMatcher.group(4) ?: "",
+                transactionId = id,
                 name = legacyMatcher.group(2)?.trim() ?: "Unknown",
                 amount = legacyMatcher.group(1)?.replace(",", "")?.toDoubleOrNull() ?: 0.0,
                 reference = legacyMatcher.group(3)?.trim(),
                 transactionType = "CASH_IN",
-                network = network ?: "MTN",
+                network = network,
                 balance = null,
                 smsBody = smsBody,
                 timestamp = timestamp
@@ -91,6 +99,17 @@ object SmsParser {
         }
 
         return null
+    }
+
+    /**
+     * Proof-reads the Transaction ID to ensure it's not a partial or malformed parse.
+     */
+    private fun isValidTransactionId(id: String): Boolean {
+        if (id.isEmpty()) return false
+        // IDs are typically long numeric strings (8-16 digits)
+        if (id.length < 8) return false
+        if (!id.all { it.isDigit() }) return false
+        return true
     }
 
     private fun detectNetwork(address: String, body: String): String? {

@@ -6,10 +6,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +36,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val selectedDate by viewModel.selectedDate.collectAsState()
     val selectedNetworks by viewModel.selectedNetworks.collectAsState()
+    val isUsbConnected by viewModel.isUsbConnected.collectAsState()
     
     // Permission States
     var isSmsReadGranted by remember { 
@@ -187,6 +191,42 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Clear All Transactions")
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // USB Status Indicator
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isUsbConnected) Color(0xFFE8F5E9) else Color(0xFFFBE9E7)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(
+                                color = if (isUsbConnected) Color.Green else Color.Red,
+                                shape = CircleShape
+                            )
+                    )
+                    Column {
+                        Text(
+                            text = if (isUsbConnected) "USB Connected" else "USB Disconnected",
+                            fontWeight = FontWeight.Bold,
+                            color = if (isUsbConnected) Color(0xFF2E7D32) else Color(0xFFC62828)
+                        )
+                        Text(
+                            text = if (isUsbConnected) "Embedded system linked" else "Check cable connection",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
         }
     }

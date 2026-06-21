@@ -31,6 +31,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     private val _selectedNetworks = MutableStateFlow(setOf("MTN", "Telecel", "AirtelTigo"))
     val selectedNetworks = _selectedNetworks.asStateFlow()
 
+    val isUsbConnected = usbManager.isConnected
+
     val transactions = combine(_selectedDate, _selectedNetworks) { dateMillis, networks ->
         dateMillis to networks
     }.flatMapLatest { (dateMillis, networks) ->
@@ -73,6 +75,12 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun setSeen(transaction: TransactionEntity, isSeen: Boolean) {
+        viewModelScope.launch {
+            dao.update(transaction.copy(isSeen = isSeen))
+        }
+    }
+
     private fun handleUsbCommand(command: String) {
         val currentList = transactions.value
         val currentIndex = currentList.indexOfFirst { it.transactionId == _selectedTransactionId.value }
@@ -92,9 +100,14 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                     _selectedTransactionId.value = currentList.last().transactionId
                 }
             }
-            "SEEN", "UNSEEN" -> {
+            "SEEN" -> {
                 currentList.find { it.transactionId == _selectedTransactionId.value }?.let {
-                    toggleSeen(it)
+                    setSeen(it, true)
+                }
+            }
+            "UNSEEN" -> {
+                currentList.find { it.transactionId == _selectedTransactionId.value }?.let {
+                    setSeen(it, false)
                 }
             }
         }
