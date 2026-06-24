@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -203,27 +204,40 @@ fun SettingsScreen(
                 )
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .background(
-                                color = if (isUsbConnected) Color.Green else Color.Red,
-                                shape = CircleShape
-                            )
-                    )
-                    Column {
-                        Text(
-                            text = if (isUsbConnected) "USB Connected" else "USB Disconnected",
-                            fontWeight = FontWeight.Bold,
-                            color = if (isUsbConnected) Color(0xFF2E7D32) else Color(0xFFC62828)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .background(
+                                    color = if (isUsbConnected) Color.Green else Color.Red,
+                                    shape = CircleShape
+                                )
                         )
-                        Text(
-                            text = if (isUsbConnected) "Embedded system linked" else "Check cable connection",
-                            style = MaterialTheme.typography.bodySmall
+                        Column {
+                            Text(
+                                text = if (isUsbConnected) "USB Connected" else "USB Disconnected",
+                                fontWeight = FontWeight.Bold,
+                                color = if (isUsbConnected) Color(0xFF2E7D32) else Color(0xFFC62828)
+                            )
+                            Text(
+                                text = if (isUsbConnected) "Embedded system linked" else "Check cable connection",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                    
+                    IconButton(onClick = { viewModel.connectUsb() }) {
+                        Icon(
+                            Icons.Default.Refresh, 
+                            contentDescription = "Refresh Connection",
+                            tint = if (isUsbConnected) Color(0xFF2E7D32) else Color(0xFFC62828)
                         )
                     }
                 }

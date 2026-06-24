@@ -7,15 +7,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object SmsScanner {
-    suspend fun scanInbox(context: Context) = withContext(Dispatchers.IO) {
+    suspend fun scanInbox(context: Context, limit: Int = 0) = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context)
         val contentResolver = context.contentResolver
+        
+        // Add a limit for frequent background scans
+        val sortOrder = if (limit > 0) {
+            "${Telephony.Sms.Inbox.DATE} DESC LIMIT $limit"
+        } else {
+            "${Telephony.Sms.Inbox.DATE} DESC"
+        }
+
         val cursor = contentResolver.query(
             Telephony.Sms.Inbox.CONTENT_URI,
             arrayOf(Telephony.Sms.Inbox.BODY, Telephony.Sms.Inbox.ADDRESS, Telephony.Sms.Inbox.DATE),
             null,
             null,
-            "${Telephony.Sms.Inbox.DATE} DESC"
+            sortOrder
         )
 
         cursor?.use {

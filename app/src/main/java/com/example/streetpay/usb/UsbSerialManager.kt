@@ -34,6 +34,7 @@ class UsbSerialManager(private val context: Context) : SerialInputOutputManager.
 
     private val usbReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            Log.d("UsbSerialManager", "Received Broadcast: ${intent.action}")
             when (intent.action) {
                 ACTION_USB_PERMISSION -> {
                     synchronized(this) {
@@ -45,12 +46,21 @@ class UsbSerialManager(private val context: Context) : SerialInputOutputManager.
                         }
                         
                         if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                            Log.d("UsbSerialManager", "Permission granted for device")
                             device?.apply { connect() }
+                        } else {
+                            Log.d("UsbSerialManager", "Permission denied for device")
                         }
                     }
                 }
-                UsbManager.ACTION_USB_DEVICE_ATTACHED -> connect()
-                UsbManager.ACTION_USB_DEVICE_DETACHED -> disconnect()
+                UsbManager.ACTION_USB_DEVICE_ATTACHED -> {
+                    Log.d("UsbSerialManager", "USB Device Attached")
+                    connect()
+                }
+                UsbManager.ACTION_USB_DEVICE_DETACHED -> {
+                    Log.d("UsbSerialManager", "USB Device Detached")
+                    disconnect()
+                }
             }
         }
     }
@@ -71,6 +81,9 @@ class UsbSerialManager(private val context: Context) : SerialInputOutputManager.
         } else {
             context.registerReceiver(usbReceiver, filter)
         }
+
+        // Try to connect immediately in case the device is already plugged in
+        connect()
     }
 
     fun connect() {
@@ -112,9 +125,24 @@ class UsbSerialManager(private val context: Context) : SerialInputOutputManager.
     fun disconnect() {
         usbIoManager?.stop()
         usbIoManager = null
-        usbPort?.close()
+        try {
+            usbPort?.close()
+        } catch (e: Exception) {
+            Log.e("UsbSerialManager", "Error closing port", e)
+        }
         usbPort = null
         _isConnected.value = false
+    }
+
+    /**
+     * Call this from Activity.onDestroy to clean up the receiver
+     */
+    fun unregisterReceiver() {
+        try {
+            context.unregisterReceiver(usbReceiver)
+        } catch (e: Exception) {
+            Log.e("UsbSerialManager", "Error unregistering receiver", e)
+        }
     }
 
     override fun onNewData(data: ByteArray) {

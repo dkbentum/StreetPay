@@ -1,7 +1,11 @@
 package com.example.streetpay
 
 import android.Manifest
+import android.database.ContentObserver
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Telephony
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,10 +25,29 @@ import com.example.streetpay.ui.viewmodel.TransactionViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private var smsObserver: ContentObserver? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Create an observer to watch the SMS inbox for changes while app is open
+        smsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                lifecycleScope.launch {
+                    // Quick scan of last 5 messages when a change is detected
+                    SmsScanner.scanInbox(this@MainActivity, limit = 5)
+                }
+            }
+        }
+
+        // Register the observer
+        contentResolver.registerContentObserver(
+            Telephony.Sms.CONTENT_URI,
+            true,
+            smsObserver!!
+        )
 
         val requestPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -65,6 +88,14 @@ class MainActivity : ComponentActivity() {
                     SettingsScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
                 }
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop watching for SMS changes when app is closed to save battery
+        smsObserver?.let {
+            contentResolver.unregisterContentObserver(it)
         }
     }
 }

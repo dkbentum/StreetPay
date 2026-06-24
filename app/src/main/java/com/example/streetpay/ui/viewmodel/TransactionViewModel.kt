@@ -115,4 +115,9 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
 
     fun connectUsb() = usbManager.connect()
     fun disconnectUsb() = usbManager.disconnect()
+
+    override fun onCleared() {
+        super.onCleared()
+        usbManager.unregisterReceiver()
+    }
 }
