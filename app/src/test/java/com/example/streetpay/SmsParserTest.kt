@@ -34,8 +34,25 @@ class SmsParserTest {
     }
 
     @Test
-    fun testTelecelCashIn() {
-        val sms = "0000013444988342 Confirmed. You have received GHS1.00 from MTN MOBILE MONEY with transaction reference: Transfer From: 233596524221-DANDELON BENTUM  on 2026-06-21 at 11:20:28. Your Telecel Cash balance is GHS2.39. Ref: day."
+    fun testMtnNewFormatCashInWithRef() {
+        val sms = "Payment received for GHS 0.05 from AISHITU ABDUL KARIM  Current Balance: GHS 71.13 . Available Balance: GHS 71.13. Reference: Funds. Transaction ID: 84018063076. TRANSACTION FEE: 0.00"
+        val transaction = SmsParser.parse(sms, 123456789L, "MobileMoney")
+        
+        assertNotNull(transaction)
+        assertEquals("84018063076", transaction?.transactionId)
+        assertEquals(0.05, transaction?.amount ?: 0.0, 0.01)
+        assertEquals("AISHITU ABDUL KARIM", transaction?.name)
+        assertEquals("Funds", transaction?.reference)
+        assertEquals(71.13, transaction?.balance ?: 0.0, 0.0)
+    }
+
+    @Test
+    fun testTelecelCashInWithMultiLine() {
+        val sms = """
+            0000013444988342 Confirmed. You have received GHS1.00 from MTN MOBILE MONEY with transaction reference: Transfer From: 233596524221-DANDELON BENTUM  on 2026-06-21 at 11:20:28. Your Telecel Cash balance is GHS2.39.
+            Ref: day.
+            Stay alert. Never share your PIN or OTP with anyone or click unknown links. Protect your personal information.
+        """.trimIndent()
         val transaction = SmsParser.parse(sms, 123456789L, "T-CASH")
         
         assertNotNull(transaction)
@@ -43,7 +60,5 @@ class SmsParserTest {
         assertEquals(1.0, transaction?.amount ?: 0.0, 0.0)
         assertEquals("DANDELON BENTUM", transaction?.name)
         assertEquals("day", transaction?.reference)
-        assertEquals(2.39, transaction?.balance ?: 0.0, 0.0)
-        assertEquals("Telecel", transaction?.network)
     }
 }

@@ -7,9 +7,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object SmsScanner {
-    suspend fun scanInbox(context: Context, limit: Int = 0) = withContext(Dispatchers.IO) {
+    /**
+     * Scans the inbox and returns true if at least one NEW transaction was found and saved.
+     */
+    suspend fun scanInbox(context: Context, limit: Int = 0): Boolean = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context)
         val contentResolver = context.contentResolver
+        var anyNew = false
         
         // Add a limit for frequent background scans
         val sortOrder = if (limit > 0) {
@@ -38,11 +42,30 @@ object SmsScanner {
 
                 val transaction = SmsParser.parse(body, date, address)
                 if (transaction != null) {
-                    if (!db.transactionDao().exists(transaction.transactionId)) {
-                        db.transactionDao().insert(transaction)
+                    // Check for duplicates with different IDs (e.g. truncated IDs)
+                    val similar = db.transactionDao().findSimilar(
+                        transaction.name,
+                        transaction.amount,
+                        transaction.timestamp
+                    )
+
+                    if (similar != null) {
+                        // If we found a match, keep the one with the LONGER ID
+                        if (transaction.transactionId.length > similar.transactionId.length) {
+                            db.transactionDao().delete(similar)
+                            db.transactionDao().insert(transaction)
+                            anyNew = true
+                        }
+                    } else {
+                        // Brand new transaction
+                        if (!db.transactionDao().exists(transaction.transactionId)) {
+                            db.transactionDao().insert(transaction)
+                            anyNew = true
+                        }
                     }
                 }
             }
         }
+        return@withContext anyNew
     }
 }

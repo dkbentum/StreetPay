@@ -15,6 +15,8 @@ ksp = "2.3.9"
 materialIconsExtended = "1.7.8"
 lifecycle = "2.8.7"
 splashscreen = "1.0.1"
+mediapipe = "0.10.14"
+camerax = "1.4.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +42,10 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 usb-serial-android = { group = "com.github.mik3y", name = "usb-serial-for-android", version.ref = "usbSerial" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+mediapipe-tasks-vision = { group = "com.google.mediapipe", name = "tasks-vision", version.ref = "mediapipe" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

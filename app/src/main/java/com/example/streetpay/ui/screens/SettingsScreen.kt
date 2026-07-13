@@ -4,14 +4,21 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.app.Activity
+import android.media.RingtoneManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.*
@@ -25,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.streetpay.ui.theme.*
 import com.example.streetpay.ui.viewmodel.TransactionViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -38,7 +46,19 @@ fun SettingsScreen(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val selectedNetworks by viewModel.selectedNetworks.collectAsState()
     val isUsbConnected by viewModel.isUsbConnected.collectAsState()
+    val isGestureEnabled by viewModel.isGestureEnabled.collectAsState()
+    val isSoundEnabled by viewModel.isSoundEnabled.collectAsState()
+    val soundName by viewModel.notificationSoundName.collectAsState()
     
+    val ringtonePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = result.data?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            viewModel.setNotificationSound(uri?.toString())
+        }
+    }
+
     // Permission States
     var isSmsReadGranted by remember { 
         mutableStateOf(hasPermission(context, Manifest.permission.READ_SMS)) 
@@ -93,10 +113,13 @@ fun SettingsScreen(
             )
         }
     ) { padding ->
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .padding(padding)
+                .fillMaxSize()
                 .padding(16.dp)
+                .verticalScroll(scrollState)
         ) {
             Text("Filters", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
@@ -181,17 +204,87 @@ fun SettingsScreen(
                 onToggle = { openAppSettings(context) }
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text("Features", style = MaterialTheme.typography.titleMedium)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PermissionToggle(
+                label = "Hand Gesture Control",
+                isGranted = isGestureEnabled,
+                onToggle = { viewModel.toggleGestureEnabled() }
+            )
+
+            PermissionToggle(
+                label = "Sound Notifications",
+                isGranted = isSoundEnabled,
+                onToggle = { viewModel.toggleSoundEnabled() }
+            )
+
+            if (isSoundEnabled) {
+                OutlinedCard(
+                    onClick = {
+                        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Notification Sound")
+                            val currentUri = viewModel.notificationSoundUri.value
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, currentUri?.let { Uri.parse(it) })
+                        }
+                        ringtonePickerLauncher.launch(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Notification Sound", style = MaterialTheme.typography.labelMedium)
+                            Text(text = soundName, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        Icon(Icons.Default.MusicNote, contentDescription = "Select Sound")
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
             
             Text("Data Management", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             
+            val scope = rememberCoroutineScope()
+            var isClearing by remember { mutableStateOf(false) }
+
             Button(
-                onClick = { /* TODO: Implement clear data */ },
+                onClick = {
+                    isClearing = true
+                    scope.launch {
+                        try {
+                            viewModel.clearAllTransactions()
+                            // Re-scan inbox to pull in clean data with new rules
+                            com.example.streetpay.sms.SmsScanner.scanInbox(context)
+                        } finally {
+                            isClearing = false
+                        }
+                    }
+                },
+                enabled = !isClearing,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Clear All Transactions")
+                if (isClearing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Refreshing...")
+                } else {
+                    Text("Clear & Refresh Transactions")
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))

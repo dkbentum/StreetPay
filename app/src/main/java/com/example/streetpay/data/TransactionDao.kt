@@ -25,4 +25,10 @@ interface TransactionDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE transactionId = :transactionId LIMIT 1)")
     suspend fun exists(transactionId: String): Boolean
+
+    @Query("SELECT * FROM transactions WHERE name = :name AND amount = :amount AND timestamp = :timestamp LIMIT 1")
+    suspend fun findSimilar(name: String, amount: Double, timestamp: Long): TransactionEntity?
+
+    @Delete
+    suspend fun delete(transaction: TransactionEntity)
 }

@@ -88,16 +88,30 @@ fun TransactionCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Line 3: ID and Time
+            // Line 3: ID, Reference and Time
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "ID: ${transaction.transactionId}",
                     fontSize = 12.sp,
                     color = if (transaction.isSeen) Color.DarkGray else Color.Gray
                 )
+
+                if (!transaction.reference.isNullOrBlank()) {
+                    Text(
+                        text = " ${transaction.reference}",    // text = "Ref: ${transaction.reference}",
+
+                        fontSize = 12.sp,
+                        color = if (transaction.isSeen) Color.DarkGray else Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 4.dp).weight(1f, fill = false)
+                    )
+                }
+
                 Text(
                     text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(transaction.timestamp)),
                     fontSize = 12.sp,

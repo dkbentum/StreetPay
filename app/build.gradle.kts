@@ -31,6 +31,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 kotlin {
@@ -65,6 +71,12 @@ dependencies {
     
     // Icons
     implementation(libs.androidx.compose.material.icons.extended)
+
+    // MediaPipe & CameraX
+    implementation(libs.mediapipe.tasks.vision)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

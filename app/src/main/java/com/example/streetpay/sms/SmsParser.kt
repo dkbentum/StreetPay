@@ -38,7 +38,7 @@ object SmsParser {
         val telecelMatcher = telecelPattern.matcher(smsBody)
         if (telecelMatcher.find()) {
             val id = telecelMatcher.group(1)?.trim() ?: ""
-            if (!isValidTransactionId(id)) return null
+            if (!isValidTransactionId(id, "Telecel")) return null
 
             var name = telecelMatcher.group(3)?.trim() ?: "Unknown"
             val reference = telecelMatcher.group(4)?.trim()
@@ -64,7 +64,7 @@ object SmsParser {
         val newMatcher = cashInPatternNew.matcher(smsBody)
         if (newMatcher.find()) {
             val id = newMatcher.group(5)?.trim() ?: ""
-            if (!isValidTransactionId(id)) return null
+            if (!isValidTransactionId(id, network)) return null
 
             return TransactionEntity(
                 transactionId = id,
@@ -83,7 +83,7 @@ object SmsParser {
         val legacyMatcher = cashInPatternLegacy.matcher(smsBody)
         if (legacyMatcher.find()) {
             val id = legacyMatcher.group(4)?.trim() ?: ""
-            if (!isValidTransactionId(id)) return null
+            if (!isValidTransactionId(id, network)) return null
 
             return TransactionEntity(
                 transactionId = id,
@@ -104,12 +104,17 @@ object SmsParser {
     /**
      * Proof-reads the Transaction ID to ensure it's not a partial or malformed parse.
      */
-    private fun isValidTransactionId(id: String): Boolean {
+    private fun isValidTransactionId(id: String, network: String): Boolean {
         if (id.isEmpty()) return false
-        // IDs are typically long numeric strings (8-16 digits)
-        if (id.length < 8) return false
         if (!id.all { it.isDigit() }) return false
-        return true
+        
+        // MTN IDs are typically 10 or 11 digits
+        // Telecel IDs are typically 16 digits
+        return when (network) {
+            "MTN" -> id.length >= 10
+            "Telecel" -> id.length >= 12 // Using 12 as a safe floor for Telecel
+            else -> id.length >= 8
+        }
     }
 
     private fun detectNetwork(address: String, body: String): String? {
